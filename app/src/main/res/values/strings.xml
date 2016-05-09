@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">MyMap</string>
     <string name="action_settings">Settings</string>
+    <string name="maptype">Map Type …</string>
+    <string name="maptype_normal">Normal</string>
+    <string name="maptype_hybrid">Hybrid</string>
+    <string name="maptype_satellite">Satellite</string>
+    <string name="maptype_terrain">Terrain</string>
+    <string name="maptype_none">None</string>
 </resources>
