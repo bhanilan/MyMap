@@ -1,6 +1,7 @@
 package com.example.berit.mymap;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -11,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -24,6 +26,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -31,7 +34,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import org.w3c.dom.Text;
 
 import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener{
 
@@ -160,65 +162,65 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 changeMapType();
                 return true;
 
-//            case R.id.menu_map_zoom_10:
-//            case R.id.menu_map_zoom_15:
-//            case R.id.menu_map_zoom_20:
-//            case R.id.menu_map_zoom_in:
-//            case R.id.menu_map_zoom_out:
-//            case R.id.menu_map_zoom_fittrack:
-//                updateMapZoomLevel(item.getItemId());
-//                return true;
+            case R.id.menu_map_zoom_10:
+            case R.id.menu_map_zoom_15:
+            case R.id.menu_map_zoom_20:
+            case R.id.menu_map_zoom_in:
+            case R.id.menu_map_zoom_out:
+            case R.id.menu_map_zoom_fittrack:
+                updateMapZoomLevel(item.getItemId());
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-//    private void updateMapZoomLevel(int itemId){
-//        if (!checkReady()) {
-//            return;
-//        }
-//
-//        switch (itemId) {
-//            case R.id.menu_map_zoom_10:
-//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
-//                break;
-//            case R.id.menu_map_zoom_15:
-//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-//                break;
-//            case R.id.menu_map_zoom_20:
-//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(20));
-//                break;
-//            case R.id.menu_map_zoom_in:
-//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomIn());
-//                break;
-//            case R.id.menu_map_zoom_out:
-//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomOut());
-//                break;
-//            case R.id.menu_map_zoom_fittrack:
-//                updateMapZoomFitTrack();
-//                break;
-//        }
-//    }
+    private void updateMapZoomLevel(int itemId){
+        if (!checkReady()) {
+            return;
+        }
 
-//    private void updateMapZoomFitTrack(){
-//        if (mPolyline==null){
-//            return;
-//        }
-//
-//        List<LatLng> points = mPolyline.getPoints();
-//
-//        if (points.size()<=1){
-//            return;
-//        }
-//        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-//        for (LatLng point : points) {
-//            builder.include(point);
-//        }
-//        LatLngBounds bounds = builder.build();
-//        int padding = 0; // offset from edges of the map in pixels
-//        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-//    }
+        switch (itemId) {
+            case R.id.menu_map_zoom_10:
+                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
+                break;
+            case R.id.menu_map_zoom_15:
+                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                break;
+            case R.id.menu_map_zoom_20:
+                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(20));
+                break;
+            case R.id.menu_map_zoom_in:
+                mGoogleMap.moveCamera(CameraUpdateFactory.zoomIn());
+                break;
+            case R.id.menu_map_zoom_out:
+                mGoogleMap.moveCamera(CameraUpdateFactory.zoomOut());
+                break;
+            case R.id.menu_map_zoom_fittrack:
+                updateMapZoomFitTrack();
+                break;
+        }
+    }
+
+    private void updateMapZoomFitTrack(){
+        if (mPolyline==null){
+            return;
+        }
+
+        List<LatLng> points = mPolyline.getPoints();
+
+        if (points.size()<=1){
+            return;
+        }
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (LatLng point : points) {
+            builder.include(point);
+        }
+        LatLngBounds bounds = builder.build();
+        int padding = 0; // offset from edges of the map in pixels
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+    }
 
     private void updateTrackPosition(){
         if (!checkReady()) {
@@ -339,10 +341,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             lineWP = lastWP.distanceTo(location);
         }
 
-        //speed in m/sec
-//        if(location.hasSpeed()){
-//
-//        }
+        int seconds = 0;
+        int minutes = 0;
+        if(location.hasSpeed()){
+            float speed = location.getSpeed();
+            float meters = (1/speed)*1000;
+            seconds = (int) (meters % 60);
+            minutes = (int) (meters / 60);
+        }
 
         locationPrevious = location;
 
@@ -352,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         textViewTotalLine.setText(String.valueOf(Math.round(totalLine)));
         textViewCresetDistance.setText(String.valueOf(Math.round(distanceCreset)));
         textViewCresetLine.setText(String.valueOf(Math.round(lineCreset)));
-        //textViewSpeed.setText();
+        textViewSpeed.setText(String.valueOf(minutes)+":"+String.valueOf(seconds));
     }
 
     @Override
