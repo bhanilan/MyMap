@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,9 +24,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -45,13 +48,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location locationCurrent;
     private Location locationPrevious;
     private Location locationStart;
+    private Location lastWP;
+    private Location locationCreset;
+
     private double totalDistance;
+    private double distanceFromWP;
+    private boolean wpSet;
+    private double totalLine;
+    private double lineWP;
+    private double distanceCreset;
+    private double lineCreset;
 
     private Polyline mPolyline;
     private PolylineOptions mPolylineOptions;
 
+    private TextView textViewCresetDistance;
     private TextView textViewWpDistance;
     private TextView textViewTotalDistance;
+
+    private TextView textViewCresetLine;
+    private TextView textViewWPLine;
+    private TextView textViewTotalLine;
+
+    private TextView textViewWPCount;
+    private TextView textViewSpeed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,14 +101,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //get last location
         locationPrevious = locationManager.getLastKnownLocation(provider);
 
+        //
+        if(locationStart == null){
+            locationStart = locationPrevious;
+        }
+
+        if(locationCreset == null){
+            locationCreset = locationPrevious;
+        }
+
         //location change changes the variables on display
         if (locationCurrent != null){
             locationPrevious = locationCurrent;
             onLocationChanged(locationCurrent);
         }
 
+        textViewCresetDistance = (TextView) findViewById(R.id.textview_creset_distance);
         textViewWpDistance = (TextView) findViewById(R.id.textview_wp_distance);
         textViewTotalDistance = (TextView) findViewById(R.id.textview_total_distance);
+
+        textViewCresetLine = (TextView) findViewById(R.id.textview_creset_line);
+        textViewWPLine = (TextView) findViewById(R.id.textview_wp_line);
+        textViewTotalLine = (TextView) findViewById(R.id.textview_total_line);
+
+        textViewWPCount = (TextView) findViewById(R.id.textview_wpcount);
+        textViewSpeed = (TextView) findViewById(R.id.textview_speed);
     }
 
     @Override
@@ -102,10 +139,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-//            case R.id.menu_mylocation:
-//                item.setChecked(!item.isChecked());
-//                updateMyLocation();
-//                return true;
+            case R.id.menu_mylocation:
+                item.setChecked(!item.isChecked());
+                updateMyLocation();
+                return true;
             case R.id.menu_trackposition:
                 item.setChecked(!item.isChecked());
                 updateTrackPosition();
@@ -123,65 +160,65 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 changeMapType();
                 return true;
 
-            case R.id.menu_map_zoom_10:
-            case R.id.menu_map_zoom_15:
-            case R.id.menu_map_zoom_20:
-            case R.id.menu_map_zoom_in:
-            case R.id.menu_map_zoom_out:
-            case R.id.menu_map_zoom_fittrack:
-                updateMapZoomLevel(item.getItemId());
-                return true;
+//            case R.id.menu_map_zoom_10:
+//            case R.id.menu_map_zoom_15:
+//            case R.id.menu_map_zoom_20:
+//            case R.id.menu_map_zoom_in:
+//            case R.id.menu_map_zoom_out:
+//            case R.id.menu_map_zoom_fittrack:
+//                updateMapZoomLevel(item.getItemId());
+//                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    private void updateMapZoomLevel(int itemId){
-        if (!checkReady()) {
-            return;
-        }
+//    private void updateMapZoomLevel(int itemId){
+//        if (!checkReady()) {
+//            return;
+//        }
+//
+//        switch (itemId) {
+//            case R.id.menu_map_zoom_10:
+//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
+//                break;
+//            case R.id.menu_map_zoom_15:
+//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+//                break;
+//            case R.id.menu_map_zoom_20:
+//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(20));
+//                break;
+//            case R.id.menu_map_zoom_in:
+//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomIn());
+//                break;
+//            case R.id.menu_map_zoom_out:
+//                mGoogleMap.moveCamera(CameraUpdateFactory.zoomOut());
+//                break;
+//            case R.id.menu_map_zoom_fittrack:
+//                updateMapZoomFitTrack();
+//                break;
+//        }
+//    }
 
-        switch (itemId) {
-            case R.id.menu_map_zoom_10:
-                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
-                break;
-            case R.id.menu_map_zoom_15:
-                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-                break;
-            case R.id.menu_map_zoom_20:
-                mGoogleMap.moveCamera(CameraUpdateFactory.zoomTo(20));
-                break;
-            case R.id.menu_map_zoom_in:
-                mGoogleMap.moveCamera(CameraUpdateFactory.zoomIn());
-                break;
-            case R.id.menu_map_zoom_out:
-                mGoogleMap.moveCamera(CameraUpdateFactory.zoomOut());
-                break;
-            case R.id.menu_map_zoom_fittrack:
-                updateMapZoomFitTrack();
-                break;
-        }
-    }
-
-    private void updateMapZoomFitTrack(){
-        if (mPolyline==null){
-            return;
-        }
-
-        List<LatLng> points = mPolyline.getPoints();
-
-        if (points.size()<=1){
-            return;
-        }
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (LatLng point : points) {
-            builder.include(point);
-        }
-        LatLngBounds bounds = builder.build();
-        int padding = 0; // offset from edges of the map in pixels
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-    }
+//    private void updateMapZoomFitTrack(){
+//        if (mPolyline==null){
+//            return;
+//        }
+//
+//        List<LatLng> points = mPolyline.getPoints();
+//
+//        if (points.size()<=1){
+//            return;
+//        }
+//        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//        for (LatLng point : points) {
+//            builder.include(point);
+//        }
+//        LatLngBounds bounds = builder.build();
+//        int padding = 0; // offset from edges of the map in pixels
+//        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+//    }
 
     private void updateTrackPosition(){
         if (!checkReady()) {
@@ -220,14 +257,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-//    private void updateMyLocation() {
-//        if (mOptionsMenu.findItem(R.id.menu_mylocation).isChecked()) {
-//            mGoogleMap.setMyLocationEnabled(true);
-//            return;
-//        }
-//
-//        mGoogleMap.setMyLocationEnabled(false);
-//    }
+    private void updateMyLocation() {
+        if (mOptionsMenu.findItem(R.id.menu_mylocation).isChecked()) {
+            mGoogleMap.setMyLocationEnabled(true);
+            return;
+        }
+
+        mGoogleMap.setMyLocationEnabled(false);
+    }
+
+
+    public void buttonAddWayPointClicked(View view){
+        if (locationPrevious==null){
+            return;
+        }
+
+        markerCount++;
+
+        mGoogleMap.addMarker(new MarkerOptions().position(new LatLng(
+                locationPrevious.getLatitude(), locationPrevious.getLongitude()))
+                .title(Integer.toString(markerCount)));
+        textViewWPCount.setText(Integer.toString(markerCount));
+
+        wpSet = true;
+        distanceFromWP = 0;
+
+        lastWP = locationPrevious;
+    }
+
+    public void buttonCResetClicked(View view){
+        distanceCreset = 0;
+        lineCreset = 0;
+        locationCreset = locationPrevious;
+    }
 
     @Override
     //after my key has been checked
@@ -243,7 +305,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     (locationPrevious.getLatitude(), locationPrevious.getLongitude())));
         }
 
-        mGoogleMap.setMyLocationEnabled(true);
     }
 
     @Override
@@ -269,11 +330,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         double distance = location.distanceTo(locationPrevious);
         totalDistance = totalDistance + distance;
+        totalLine = locationStart.distanceTo(location);
+        distanceCreset = distanceCreset + distance;
+        lineCreset = locationCreset.distanceTo(location);
+
+        if(wpSet){
+            distanceFromWP = distanceFromWP + distance;
+            lineWP = lastWP.distanceTo(location);
+        }
+
+        //speed in m/sec
+//        if(location.hasSpeed()){
+//
+//        }
 
         locationPrevious = location;
 
-        textViewWpDistance.setText(String.valueOf(Math.round(distance)));
+        textViewWpDistance.setText(String.valueOf(Math.round(distanceFromWP)));
         textViewTotalDistance.setText(String.valueOf(Math.round(totalDistance)));
+        textViewWPLine.setText(String.valueOf(Math.round(lineWP)));
+        textViewTotalLine.setText(String.valueOf(Math.round(totalLine)));
+        textViewCresetDistance.setText(String.valueOf(Math.round(distanceCreset)));
+        textViewCresetLine.setText(String.valueOf(Math.round(lineCreset)));
+        //textViewSpeed.setText();
     }
 
     @Override
